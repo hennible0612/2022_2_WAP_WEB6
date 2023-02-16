@@ -8,6 +8,7 @@ import javax.persistence.*;
 
 @Entity
 @Getter
+@Setter
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
@@ -44,8 +45,6 @@ public class CommentEntity {
 //    private Long parent_comment_id;
     private Long parentCommentId;
 
-
-
     public boolean isProCon() {
         return proCon;
     }
@@ -61,9 +60,9 @@ public class CommentEntity {
             throw new IllegalArgumentException("댓글 생성 실패 ! 댓글의id가 없어야합니다");
         }
 
-        if (dto.getProConTopicId() != proConTopic.getId()) { // 받은 json 이랑 target id다를시
-            throw new IllegalArgumentException("댓글 생성 실패 ! 게시글의 id가 잘못되었습니다");
-        }
+//        if (dto.getProConTopicId() != proConTopic.getId()) { // 받은 json 이랑 target id다를시
+//            throw new IllegalArgumentException("댓글 생성 실패 ! 게시글의 id가 잘못되었습니다");
+//        }
 
         // 엔티티 생성 및 반환
         return new CommentEntity(

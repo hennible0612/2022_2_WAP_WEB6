@@ -1,5 +1,6 @@
 package com.web.backend.comment;
 
+import com.web.backend.likedislikecomment.LikeDislikeCommentRepository;
 import com.web.backend.proconboard.ProConTopicEntity;
 import com.web.backend.proconboard.ProConTopicRepository;
 import com.web.backend.user.UserDetailsRepository;
@@ -10,11 +11,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Pageable;
-import javax.annotation.PostConstruct;
+
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,9 @@ public class CommentService {
 
     @Autowired
     private ProConTopicRepository proConTopicRepository;
+
+    @Autowired
+    private LikeDislikeCommentRepository likeDislikeCommentRepository;
 
 //    @PostConstruct
 //    public void initDB(){
@@ -61,16 +65,22 @@ public class CommentService {
         return comments;
     }
 
-    public Page<CommentDto> proConCommentsWithPagination(int offset, int pageSize, Long proconId) {
+    public Page<CommentDto> proConCommentsWithPagination(int offset, int pageSize, Long proconId, HashMap<String, Long> map) {
+        List<?> likeDislikeCommentEntity = likeDislikeCommentRepository.getByUserIdAndProconId(map.get("userId"), proconId );
+
+
         offset -= 1;
-
-        List<CommentEntity> comments = commentRepository.findByProConTopicId(proconId);
-
+        List<CommentEntity> comments = commentRepository.findComments(proconId);
         List<CommentDto> dtos = new ArrayList<CommentDto>();
+
         for (int i = 0; i < comments.size(); i++) {
 
             CommentEntity c = comments.get(i);
+
             CommentDto dto = CommentDto.createCommentDto(c);
+
+//            dto.setFavStatus();
+
             dtos.add(dto);
         }
         dtos = dtos.stream().sorted(Comparator.comparing(CommentDto::getLikeNum).reversed()).collect(Collectors.toList());
@@ -154,6 +164,7 @@ public class CommentService {
         CommentEntity created = commentRepository.save(comment);
 
         return CommentDto.createCommentDto(created);
+
     }
 
     @Transactional
@@ -182,5 +193,19 @@ public class CommentService {
         return CommentDto.createCommentDto(target);
     }
 
+    //마이페이지 - 댓글 조회
+    public List<CommentDto> getCommentsByUser(Long userId) {
+        List<CommentEntity> comments = commentRepository.getCommentByUserId(userId);
+        // 변환 : 엔티티 -> DTO
+        List<CommentDto> dtos = new ArrayList<CommentDto>();
+
+        for (int i = 0; i < comments.size(); i++) {
+            CommentEntity c = comments.get(i);
+            CommentDto dto = CommentDto.createCommentDto(c);
+            dtos.add(dto);
+        }
+
+        return dtos;
+    }
 
 }
