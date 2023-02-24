@@ -6,8 +6,18 @@ import * as config from "../../config";
 import { useParams } from "react-router-dom";
 import { getId } from "../../userInfo/userInfo";
 import { AiOutlineUp, AiOutlineDown } from "react-icons/ai";
+import LikeDislike from "../LikeDislike/LikeDislike";
 
-function CommentBox({ name, content, likeNum, dislikeNum }) {
+function CommentBox({
+  id,
+  name,
+  content,
+  likeNum,
+  dislikeNum,
+  favStatus,
+  debateId,
+  getFavStatus,
+}) {
   return (
     <li className="commentBox">
       <div className="commetUserImg">
@@ -22,8 +32,14 @@ function CommentBox({ name, content, likeNum, dislikeNum }) {
         <p dangerouslySetInnerHTML={{ __html: content }}></p>
       </div>
       <div className="reaction">
-        <span>👍 {likeNum}</span>
-        <span>👎 {dislikeNum}</span>
+        <LikeDislike
+          likeNum={likeNum}
+          dislikeNum={dislikeNum}
+          favStatus={favStatus}
+          commentId={id}
+          debateId={debateId}
+          getFavStatus={getFavStatus}
+        ></LikeDislike>
       </div>
     </li>
   );
@@ -58,8 +74,11 @@ function ChatBox(props) {
     async function fetchNestedComment() {
       try {
         await axios({
-          method: "get",
+          method: "post",
           url: `http://${config.URL}/api/reply/proconTopic/${params.debateId}/motherComment/${props.id}`,
+          data: {
+            userId: getId(),
+          },
         }).then((response) => {
           if (response.status === 200) {
             //console.log(response);
@@ -74,7 +93,7 @@ function ChatBox(props) {
     }
 
     fetchNestedComment();
-  }, [getVisible === true]);
+  }, [getVisible === true, props.getFavStatus]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -141,8 +160,16 @@ function ChatBox(props) {
         </div>
         <div className={"reaction " + "reaction" + classNameSet}>
           {/* 기능 구현X -> 좋아요, 싫어요, 대댓글*/}
-          <span>👍 {props.likeNum}</span>
-          <span>👎 {props.dislikeNum}</span>
+          <LikeDislike
+            likeNum={props.likeNum}
+            dislikeNum={props.dislikeNum}
+            favStatus={props.favStatus}
+            commentId={props.id}
+            debateId={params.debateId}
+            getFavStatus={props.getFavStatus}
+          ></LikeDislike>
+          {/*<span> <FontAwesomeIcon icon={faThumbsUp} size="1x"/> {props.likeNum}</span>*/}
+          {/*<span> <FontAwesomeIcon icon={faThumbsDown} size="1x"/> {props.dislikeNum}</span>*/}
           <button
             onClick={() => {
               setPostVisible(!postVisible);
@@ -175,10 +202,14 @@ function ChatBox(props) {
               return (
                 <CommentBox
                   key={it.id}
+                  id={it.id}
                   name={it.userName}
                   content={it.content}
                   likeNum={it.likeNum}
                   dislikeNum={it.dislikeNum}
+                  favStatus={it.favStatus}
+                  debateId={params.debateId}
+                  getFavStatus={props.getFavStatus}
                 />
               );
             })}
